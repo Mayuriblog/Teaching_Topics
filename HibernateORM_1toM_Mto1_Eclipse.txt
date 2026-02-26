@@ -1,0 +1,301 @@
+Develop hibernate application contains one-many and 
+many-one relationship
+-----------------------------------------------------------
+Step 1: Create Maven Project in Eclipse
+
+Open Eclipse and Go to File → New → Maven Project 
+and Select Create a simple project and Enter
+Group Id: com.example
+Artifact Id: HibernateOneToMany
+Click Finish
+
+Step 2: Add Dependencies (pom.xml)
+Open pom.xml and add: hibernate orm,mysql,jpa
+Right click project → Maven → Update Project 
+(check all dependencies are downloaded or not)
+
+Step 3: Create Package Structure
+Inside src/main/java create:
+com.example.entity
+com.example.util
+com.example.main
+
+Step 4: In entity package you can Create Parent Entity 
+(Department.java) and Child Entity (Employee.java)
+
+Step 5: In util package you can Create Hibernate Utility 
+Class (HibernateUtil.java)
+
+Step 6: In main package you can Create Main Class (MainApp.java)
+
+Step 7: Create Hibernate Configuration file in the following
+ folder src/main/resources/hibernate.cfg.xml
+(check properly database name,username,password)
+
+Step 8: Create Database in Mysql Workbench
+create database hibernate_db;
+use hibernate_db;
+
+Step 9: Run the Project
+open eclipse IDE 
+Go to Project -> Right Click → Run As → Java Application
+
+Hibernate will automatically create:
+department table
+employee table
+foreign key
+(Check it once in the workbench)
+-------------------------------------------------------
+pom.xml
+-------------------------------------------------------
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>HibernateOneToMany</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+
+    <!-- Hibernate -->
+    <dependency>
+        <groupId>org.hibernate.orm</groupId>
+        <artifactId>hibernate-core</artifactId>
+        <version>6.4.4.Final</version>
+    </dependency>
+
+    <!-- MySQL Driver -->
+    <dependency>
+        <groupId>com.mysql</groupId>
+        <artifactId>mysql-connector-j</artifactId>
+        <version>8.3.0</version>
+    </dependency>
+
+    <!-- JPA -->
+    <dependency>
+        <groupId>jakarta.persistence</groupId>
+        <artifactId>jakarta.persistence-api</artifactId>
+        <version>3.1.0</version>
+    </dependency>
+
+</dependencies>
+</project>
+-------------------------------------------------------
+Department.java
+-------------------------------------------------------
+package com.example.entity;
+
+import jakarta.persistence.*;
+import java.util.List;
+
+@Entity
+public class Department {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String name;
+
+    @OneToMany(mappedBy="department", cascade=CascadeType.ALL)
+    private List<Employee> employees;
+
+	public Department() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	public Department(int id, String name, List<Employee> employees) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.employees = employees;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public List<Employee> getEmployees() {
+		return employees;
+	}
+
+	public void setEmployees(List<Employee> employees) {
+		this.employees = employees;
+	}
+
+    // getters and setters
+	
+	
+	
+}
+-------------------------------------------------------
+Employee.java
+-------------------------------------------------------
+package com.example.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+public class Employee {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String name;
+
+    @ManyToOne
+    @JoinColumn(name="dept_id")
+    private Department department;
+
+	public Employee() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	public Employee(int id, String name, Department department) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.department = department;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Department getDepartment() {
+		return department;
+	}
+
+	public void setDepartment(Department department) {
+		this.department = department;
+	}
+
+	@Override
+	public String toString() {
+		return "Employee [id=" + id + ", name=" + name + ", department=" + department + "]";
+	}
+
+    // getters and setters
+    
+}
+
+-------------------------------------------------------
+HibernateUtil.java
+-------------------------------------------------------
+package com.example.util;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil {
+
+    private static final SessionFactory factory =
+            new Configuration().configure().buildSessionFactory();
+
+    public static SessionFactory getFactory() {
+        return factory;
+    }
+}
+
+-------------------------------------------------------
+MainApp.java
+-------------------------------------------------------
+package com.example.main;
+
+import org.hibernate.Session;
+import com.example.entity.*;
+import com.example.util.HibernateUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainApp {
+
+    public static void main(String[] args) {
+
+        Session session = HibernateUtil.getFactory().openSession();
+
+        Department dept = new Department();
+        dept.setName("CSE");
+
+        Employee e1 = new Employee();
+        e1.setName("Anudeep KV");
+
+        Employee e2 = new Employee();
+        e2.setName("Anil Ravipudi");
+
+        e1.setDepartment(dept);
+        e2.setDepartment(dept);
+
+       // dept.setEmployees(List.of(e1,e2));
+	   List<Employee> empList = new ArrayList<Employee>();
+        empList.add(e1);
+        empList.add(e2);
+        dept.setEmployees(empList);
+
+        session.beginTransaction();
+        session.persist(dept);
+        session.getTransaction().commit();
+
+        session.close();
+    }
+}
+-------------------------------------------------------
+hibernate.cfg.xml
+-------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+ <session-factory>
+
+  <property name="hibernate.connection.driver_class">
+      com.mysql.cj.jdbc.Driver
+  </property>
+
+  <property name="hibernate.connection.url">
+      jdbc:mysql://localhost:3306/hibernate_db
+  </property>
+
+  <property name="hibernate.connection.username">root</property>
+  <property name="hibernate.connection.password">root</property>
+
+  <property name="hibernate.dialect">
+      org.hibernate.dialect.MySQLDialect
+  </property>
+
+  <property name="hibernate.hbm2ddl.auto">update</property>
+  <property name="hibernate.show_sql">true</property>
+
+  <mapping class="com.example.entity.Department"/>
+  <mapping class="com.example.entity.Employee"/>
+
+ </session-factory>
+</hibernate-configuration>
+---------------------------------------------------------------
+
+
