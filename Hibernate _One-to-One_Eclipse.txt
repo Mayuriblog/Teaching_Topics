@@ -1,0 +1,239 @@
+1. What is One-to-One Mapping?
+
+One record in Table A connects to exactly one record in Table B.
+
+Example:
+
+Person → Passport
+A person has only one passport
+
+
+Database:
+
+Person Table
+Passport Table
+Foreign Key in Person
+
+✅ 2. Software Requirements
+
+Install:
+
+Java JDK 17+
+
+Eclipse IDE
+
+MySQL
+
+Maven (comes with Eclipse usually)
+
+✅ 3. Create Maven Project in Eclipse
+Step 1
+File → New → Maven Project
+
+Step 2
+
+Select:
+
+Create Simple Project
+
+Step 3
+
+Enter:
+
+GroupId: com.example
+ArtifactId: HibernateOneToOne
+
+
+Click Finish ✅
+
+✅ 4. Add Dependencies (pom.xml)
+
+Open pom.xml and add:
+
+<dependencies>
+
+    <dependency>
+        <groupId>org.hibernate.orm</groupId>
+        <artifactId>hibernate-core</artifactId>
+        <version>6.4.4.Final</version>
+    </dependency>
+
+    <dependency>
+        <groupId>jakarta.persistence</groupId>
+        <artifactId>jakarta.persistence-api</artifactId>
+        <version>3.1.0</version>
+    </dependency>
+
+    <dependency>
+        <groupId>com.mysql</groupId>
+        <artifactId>mysql-connector-j</artifactId>
+        <version>8.3.0</version>
+    </dependency>
+
+</dependencies>
+
+
+Then:
+
+Right Click Project → Maven → Update Project
+
+✅ 5. Create Package Structure
+
+Inside src/main/java create:
+
+com.example.entity
+com.example.util
+com.example.main
+
+✅ 6. Create Entity Classes
+🔹 Passport (Inverse Side)
+package com.example.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+public class Passport {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String number;
+
+    @OneToOne(mappedBy="passport")
+    private Person person;
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getNumber() { return number; }
+    public void setNumber(String number) { this.number = number; }
+
+    public Person getPerson() { return person; }
+    public void setPerson(Person person) { this.person = person; }
+}
+
+🔹 Person (Owning Side)
+package com.example.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+public class Person {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String name;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="passport_id")
+    private Passport passport;
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public Passport getPassport() { return passport; }
+    public void setPassport(Passport passport) { this.passport = passport; }
+}
+
+✅ 7. Hibernate Configuration
+
+Create file:
+
+src/main/resources/hibernate.cfg.xml
+
+<hibernate-configuration>
+ <session-factory>
+
+  <property name="hibernate.connection.driver_class">
+      com.mysql.cj.jdbc.Driver
+  </property>
+
+  <property name="hibernate.connection.url">
+      jdbc:mysql://localhost:3306/testdb
+  </property>
+
+  <property name="hibernate.connection.username">root</property>
+  <property name="hibernate.connection.password">root</property>
+
+  <property name="hibernate.dialect">
+      org.hibernate.dialect.MySQLDialect
+  </property>
+
+  <property name="hibernate.hbm2ddl.auto">update</property>
+  <property name="hibernate.show_sql">true</property>
+
+  <mapping class="com.example.entity.Person"/>
+  <mapping class="com.example.entity.Passport"/>
+
+ </session-factory>
+</hibernate-configuration>
+
+✅ 8. Hibernate Utility Class
+package com.example.util;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil {
+
+    private static final SessionFactory factory =
+            new Configuration().configure().buildSessionFactory();
+
+    public static SessionFactory getFactory(){
+        return factory;
+    }
+}
+
+✅ 9. Main Class (Insert Data)
+package com.example.main;
+
+import org.hibernate.Session;
+import com.example.entity.*;
+import com.example.util.HibernateUtil;
+
+public class MainApp {
+
+    public static void main(String[] args) {
+
+        Session session = HibernateUtil.getFactory().openSession();
+
+        Person p = new Person();
+        p.setName("Krishna");
+
+        Passport pass = new Passport();
+        pass.setNumber("IND2025XYZ");
+
+        p.setPassport(pass);
+
+        session.beginTransaction();
+        session.persist(p);
+        session.getTransaction().commit();
+
+        session.close();
+    }
+}
+
+✅ 10. Create Database
+
+Open MySQL:
+
+create database testdb;
+
+✅ 11. Run Project
+
+Right Click:
+
+Run As → Java Application
+
+
+Hibernate automatically creates:
+
+person table
+passport table
+foreign key column
