@@ -1,0 +1,316 @@
+Develop Simple Spring Boot Application Using STS tool
+-------------------------------------------------------
+Step 1: File --> New --> Spring Starter Project --> 
+         Name : EmployeeCrud
+		 Type : Maven
+		 Packaging:Jar
+		 Java Version:17
+		Check the 
+		group: com.example
+		artifact : EmployeeCrud
+		Package: com.example.demo
+		version: 0.0.1-SNAPSHOT
+		Description: EmployeeCrud project for Spring Boot
+		Package : com.example.demo
+	  --> Click on Next
+        Available : --> Type : Web
+					   Select Spring Web in Web 
+					-->Type :jpa
+                       Select Spring Data JPA 
+                    -->Type: mySql
+                       select MySql Driver
+					--> Type :DevTools
+                       select Boot DevTools
+     
+                    Next --> Finish
+Step 2:
+---------
+
+--->Click On Project Name --> Click on the Folder  
+Src/main/resources --> Open --> Click On Application.properties file
+Default it is having the application name
+--> Here you can add some properties
+      Like 
+        *driver class name
+        *URL
+        *User Name 
+        *Password
+        *Hibernate dialect
+        *DDL/Auto
+        *show SQL
+        *Server. port Property
+(ctrl + space bar is easy to search these properties)
+
+Step 3:
+--------
+Click on project --> Src/main/java --> click on com.example.demo
+Right--> click-->new-->class Extend the package name --> com.example.demo.entity
+---> Name:Employee   
+         Click on Finish
+
+---> Employee.java --> it includes private variables,
+empty constructors,Parametrized constructors,
+getter and setter methods,toString method,
+hash code and equal methods with proper annotations
+
+Step 4:
+---------
+
+Click on com,example.demo-->New-->interface
+    *Type --> Package:com.example.demo.repository
+    *Name: EmployeeRepository --> Finish
+
+  default code:   public interface EmployeeRepository{ }
+* You can Modify the above code by adding JPA Repository Extension 
+
+     public interface Employee Repository extends
+     Jpa Repository<Employee,Integer>{ }
+	 
+(ctrl + space bar you can observe all the inbuilt Methods)	
+ 
+Step 5: 
+--------
+Click on: com.example.demo --> Right Click -->
+ New --> Class --> Package
+
+	i) package: com.example.demo.service
+	ii) Name : EmployeeService
+
+-> It includes all the service methods like saveEmployees, 
+GetAllEmployees, GetEmployeeById, DeleteEmployee, etc.,
+
+
+Step 6: 
+--------
+Click on: com.example.demo --> RightClick --> New --> class
+
+	i) package: com.example.demo.controller
+	ii) Name :  EmployeeController
+
+-> Here, you can use @RestController and 
+Request Mapping Methods(get,put,push,delete)
+
+Step 7: click on -> EmployeeCrud --> Right Click --> Run as --> SpringBootApp
+-------
+
+Step 8: Check the console with the proper port number and application started status
+-------
+Step 9: Go to the browser and than type:
+-------
+		https://localhost:8080/employees
+
+Step 10: By using the browser url, we can see all the methods related to GET,
+-------- 
+now we want to see the methods( POST, PUT, DELETE)
+
+Step 11: open postman app and select (POST) type url:
+-------
+		http://localhost:8080/employees
+you can click on body tab and then you can click on Raw tab and
+then write the JSON object 
+
+	Ex:  {
+	        "id":8, 
+			"name":"Trinayani",
+			"email":"trinayani@gmail.com", 
+			"salary":100000
+		}
+
+	Click on send then you can observe the output
+
+Step 12: open MySQL workbench
+
+	 --> click on refresh tab on the database skillnext2_db 
+		
+	 --> click on employee
+
+	 --> click on table symbol on the employee, then you can observe the output
+
+Likewise you perform operations PUT and DELETE with proper URL's which are
+mentioned in controller program
+
+--------------------------------------------------------------
+application.properties
+--------------------------------------------------------------
+spring.application.name=EmployeeCrud
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/skillnext2_db
+spring.datasource.username=root
+spring.datasource.password=root
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+server.port=8080
+--------------------------------------------------------------
+Employee.java
+--------------------------------------------------------------
+package com.example.demo.entity;
+import java.util.Objects;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
+public class Employee {
+	@Id
+	// @GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	
+	@Column(name = "name")
+	private String name;
+	@Column(name = "email")
+	private String email;
+	@Column(name = "salary")
+	private double salary;
+	public Employee() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+	public Employee(int id, String name, String email, double salary) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.email = email;
+		this.salary = salary;
+	}
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	public double getSalary() {
+		return salary;
+	}
+	public void setSalary(double salary) {
+		this.salary = salary;
+	}
+	@Override
+	public String toString() {
+		return "Employee [id=" + id + ", name=" + name + ", email=" + email + ", salary=" + salary + "]";
+	}
+	@Override
+	public int hashCode() {
+		return Objects.hash(email, id, name, salary);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Employee other = (Employee) obj;
+		return Objects.equals(email, other.email) && id == other.id && Objects.equals(name, other.name)
+				&& Double.doubleToLongBits(salary) == Double.doubleToLongBits(other.salary);
+	}
+	
+	
+}
+
+--------------------------------------------------------------
+EmployeeRepository.java   ---> Interface
+--------------------------------------------------------------
+package com.example.demo.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.example.demo.entity.Employee;
+
+public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
+	
+
+}
+--------------------------------------------------------------
+EmployeeService.java
+--------------------------------------------------------------
+package com.example.demo.service;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.example.demo.entity.Employee;
+import com.example.demo.repository.EmployeeRepository;
+
+@Service
+public class EmployeeService {
+
+    @Autowired
+    private EmployeeRepository repo;
+
+    public Employee saveEmployee(Employee emp) {
+        return repo.save(emp);
+    }
+
+    public List<Employee> getAllEmployees() {
+        return repo.findAll();
+    }
+
+    public Employee getEmployeeById(int id) {
+        return repo.findById(id).orElse(null);
+    }
+
+    public void deleteEmployee(int id) {
+        repo.deleteById(id);
+    }
+}
+
+--------------------------------------------------------------
+EmployeeController.java
+--------------------------------------------------------------
+package com.example.demo.controller;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import com.example.demo.entity.Employee;
+import com.example.demo.service.EmployeeService;
+
+@RestController
+@RequestMapping("/employees")
+public class EmployeeController {
+
+    @Autowired
+    private EmployeeService service;
+
+    @PostMapping
+    public Employee addEmployee(@RequestBody Employee emp) {
+        return service.saveEmployee(emp);
+    }
+
+    @GetMapping
+    public List<Employee> getAll() {
+        return service.getAllEmployees();
+    }
+
+    @GetMapping("/{id}")
+    public Employee getById(@PathVariable int id) {
+        return service.getEmployeeById(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public String delete(@PathVariable int id) {
+        service.deleteEmployee(id);
+        return "Employee Deleted Successfully";
+    }
+}
+--------------------------------------------------------------	
+GET http://localhost:8080/employees    (Retrieving all employees)
+GET http://localhost:8080/employees/5  (Retrieving employee by id 5)
+POST http://localhost:8080/employees   (Sending / saving employee record)
+DELETE http://localhost:8080/employees/3 (Delete an employee whose id is 3)
+
+	
