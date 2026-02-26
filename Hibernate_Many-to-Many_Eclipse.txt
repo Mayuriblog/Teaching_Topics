@@ -1,0 +1,198 @@
+Step-by-Step: Many-to-Many Mapping (Hibernate + Eclipse)
+🔹 Step 1: Create Maven Project
+
+Open Eclipse
+
+File → New → Maven Project
+
+Select Create Simple Project
+
+Enter:
+
+GroupId: com.example
+
+ArtifactId: HibernateManyToMany
+
+
+Click Finish
+
+🔹 Step 2: Add Dependencies (pom.xml)
+<dependencies>
+
+    <!-- Hibernate -->
+    <dependency>
+        <groupId>org.hibernate.orm</groupId>
+        <artifactId>hibernate-core</artifactId>
+        <version>6.4.4.Final</version>
+    </dependency>
+
+    <!-- MySQL -->
+    <dependency>
+        <groupId>com.mysql</groupId>
+        <artifactId>mysql-connector-j</artifactId>
+        <version>8.3.0</version>
+    </dependency>
+
+    <!-- JPA -->
+    <dependency>
+        <groupId>jakarta.persistence</groupId>
+        <artifactId>jakarta.persistence-api</artifactId>
+        <version>3.1.0</version>
+    </dependency>
+
+</dependencies>
+
+
+👉 Right Click Project → Maven → Update Project
+
+🔹 Step 3: Create Packages
+com.example.entity
+com.example.util
+com.example.main
+
+🔹 Step 4: Create Student Entity (Owning Side)
+package com.example.entity;
+
+import jakarta.persistence.*;
+import java.util.List;
+
+@Entity
+public class Student {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String name;
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+        name="student_course",
+        joinColumns=@JoinColumn(name="student_id"),
+        inverseJoinColumns=@JoinColumn(name="course_id")
+    )
+    private List<Course> courses;
+
+    // getters and setters
+}
+
+🔹 Step 5: Create Course Entity (Inverse Side)
+package com.example.entity;
+
+import jakarta.persistence.*;
+import java.util.List;
+
+@Entity
+public class Course {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String title;
+
+    @ManyToMany(mappedBy="courses")
+    private List<Student> students;
+
+    // getters and setters
+}
+
+🔹 Step 6: Create Hibernate Configuration
+
+Create file:
+
+src/main/resources/hibernate.cfg.xml
+
+<hibernate-configuration>
+ <session-factory>
+
+  <property name="hibernate.connection.driver_class">
+      com.mysql.cj.jdbc.Driver
+  </property>
+
+  <property name="hibernate.connection.url">
+      jdbc:mysql://localhost:3306/testdb
+  </property>
+
+  <property name="hibernate.connection.username">root</property>
+  <property name="hibernate.connection.password">root</property>
+
+  <property name="hibernate.dialect">
+      org.hibernate.dialect.MySQLDialect
+  </property>
+
+  <property name="hibernate.hbm2ddl.auto">update</property>
+  <property name="hibernate.show_sql">true</property>
+
+  <mapping class="com.example.entity.Student"/>
+  <mapping class="com.example.entity.Course"/>
+
+ </session-factory>
+</hibernate-configuration>
+
+🔹 Step 7: Hibernate Utility Class
+package com.example.util;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil {
+
+    private static final SessionFactory factory =
+            new Configuration().configure().buildSessionFactory();
+
+    public static SessionFactory getFactory() {
+        return factory;
+    }
+}
+
+🔹 Step 8: Create Main Class
+package com.example.main;
+
+import org.hibernate.Session;
+import java.util.Arrays;
+import com.example.entity.*;
+import com.example.util.HibernateUtil;
+
+public class MainApp {
+
+    public static void main(String[] args) {
+
+        Session session = HibernateUtil.getFactory().openSession();
+
+        Student s1 = new Student();
+        s1.setName("Krishna");
+
+        Student s2 = new Student();
+        s2.setName("Rao");
+
+        Course c1 = new Course();
+        c1.setTitle("Java");
+
+        Course c2 = new Course();
+        c2.setTitle("DBMS");
+
+        s1.setCourses(Arrays.asList(c1,c2));
+        s2.setCourses(Arrays.asList(c1));
+
+        session.beginTransaction();
+        session.persist(s1);
+        session.persist(s2);
+        session.getTransaction().commit();
+
+        session.close();
+    }
+}
+
+🔹 Step 9: Create Database
+create database testdb;
+
+🔹 Step 10: Run Project
+
+Right Click → Run As → Java Application
+
+Hibernate will create:
+
+student
+course
+student_course (Join Table)
