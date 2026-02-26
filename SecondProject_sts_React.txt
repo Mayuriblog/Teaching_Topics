@@ -1,0 +1,262 @@
+✅ STEP 1: Create Employee Table (MySQL)
+CREATE DATABASE employeedb;
+
+USE employeedb;
+
+CREATE TABLE employee (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100),
+  email VARCHAR(100),
+  salary DOUBLE
+);
+✅ STEP 2: Create Spring Boot Project in STS
+1️⃣ Open STS
+
+File → New → Spring Starter Project
+
+Project Name: employee-backend
+
+Type: Maven
+
+Packaging: Jar
+
+Java: 17 (recommended)
+
+Dependencies:
+
+Spring Web
+
+Spring Data JPA
+
+MySQL Driver
+
+Lombok
+
+Finish.
+
+✅ STEP 3: application.properties
+
+src/main/resources/application.properties
+
+spring.datasource.url=jdbc:mysql://localhost:3306/employeedb
+spring.datasource.username=root
+spring.datasource.password=root
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+
+server.port=8080
+✅ STEP 4: Create Employee Entity
+package com.example.demo.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Employee {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    private String name;
+    private String email;
+    private Double salary;
+}
+✅ STEP 5: Repository
+package com.example.demo.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.demo.entity.Employee;
+
+public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
+}
+✅ STEP 6: Controller (REST API)
+package com.example.demo.controller;
+
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import com.example.demo.entity.Employee;
+import com.example.demo.repository.EmployeeRepository;
+
+@CrossOrigin(origins = "http://localhost:3000")
+@RestController
+@RequestMapping("/employees")
+public class EmployeeController {
+
+    @Autowired
+    private EmployeeRepository repo;
+
+    @GetMapping
+    public List<Employee> getAllEmployees() {
+        return repo.findAll();
+    }
+
+    @PostMapping
+    public Employee createEmployee(@RequestBody Employee emp) {
+        return repo.save(emp);
+    }
+
+    @GetMapping("/{id}")
+    public Employee getEmployee(@PathVariable int id) {
+        return repo.findById(id).orElse(null);
+    }
+
+    @PutMapping("/{id}")
+    public Employee updateEmployee(@PathVariable int id, @RequestBody Employee emp) {
+        Employee e = repo.findById(id).orElse(null);
+        e.setName(emp.getName());
+        e.setEmail(emp.getEmail());
+        e.setSalary(emp.getSalary());
+        return repo.save(e);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteEmployee(@PathVariable int id) {
+        repo.deleteById(id);
+    }
+}
+✅ STEP 7: Run Spring Boot
+
+Right Click Project → Run As → Spring Boot App
+
+Test in browser:
+
+http://localhost:8080/employees
+
+If JSON appears → Backend is working ✅
+
+✅ STEP 8: Create React App
+
+Open Command Prompt:
+
+npx create-react-app sbb3employee-frontend
+cd sbb3employee-frontend
+npm install axios react-router-dom
+npm start
+
+Runs on:
+
+http://localhost:3000
+✅ STEP 9: Project Structure (React)
+src/
+ ├── components/
+ │     ├── EmployeeList.js
+ │     ├── AddEmployee.js
+ ├── App.js
+✅ STEP 10: EmployeeList.js
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+function EmployeeList() {
+
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    axios.get("http://localhost:8080/employees")
+      .then(res => setEmployees(res.data));
+  }, []);
+
+  const deleteEmployee = (id) => {
+    axios.delete(`http://localhost:8080/employees/${id}`)
+      .then(() => {
+        setEmployees(employees.filter(emp => emp.id !== id));
+      });
+  };
+
+  return (
+    <div>
+      <h2>Employee List</h2>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Salary</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {employees.map(emp => (
+            <tr key={emp.id}>
+              <td>{emp.id}</td>
+              <td>{emp.name}</td>
+              <td>{emp.email}</td>
+              <td>{emp.salary}</td>
+              <td>
+                <button onClick={() => deleteEmployee(emp.id)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default EmployeeList;
+✅ STEP 11: AddEmployee.js
+import React, { useState } from "react";
+import axios from "axios";
+
+function AddEmployee() {
+
+  const [employee, setEmployee] = useState({
+    name: "",
+    email: "",
+    salary: ""
+  });
+
+  const handleChange = (e) => {
+    setEmployee({...employee, [e.target.name]: e.target.value});
+  };
+
+  const saveEmployee = (e) => {
+    e.preventDefault();
+    axios.post("http://localhost:8080/employees", employee)
+      .then(() => alert("Employee Added"));
+  };
+
+  return (
+    <div>
+      <h2>Add Employee</h2>
+      <form onSubmit={saveEmployee}>
+        <input type="text" name="name" placeholder="Name" onChange={handleChange} />
+        <input type="email" name="email" placeholder="Email" onChange={handleChange} />
+        <input type="number" name="salary" placeholder="Salary" onChange={handleChange} />
+        <button type="submit">Save</button>
+      </form>
+    </div>
+  );
+}
+
+export default AddEmployee;
+✅ STEP 12: App.js
+import React from "react";
+import EmployeeList from "./components/EmployeeList";
+import AddEmployee from "./components/AddEmployee";
+
+function App() {
+  return (
+    <div>
+      <AddEmployee />
+      <EmployeeList />
+    </div>
+  );
+}
+
+export default App;
+🎯 Final Output
+
+You now have:
+
+✔ Spring Boot Backend (STS)
+✔ MySQL Database
+✔ React Frontend
+✔ Full CRUD Employee Application
